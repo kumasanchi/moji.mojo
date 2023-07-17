@@ -3,11 +3,22 @@
 <head>
     <title>音声認識</title>
     <style>
+        .controls {
+            width: 30%;
+            float: left;
+            padding-right: 20px;
+            box-sizing: border-box;
+        }
+        .log {
+            width: 70%;
+            float: left;
+            box-sizing: border-box;
+        }
         #status {
             padding: 1em;
             color: white;
             display: inline-block;
-            margin-left: 10px;
+            margin-bottom: 10px;
         }
         .remove {
             cursor: pointer;
@@ -20,25 +31,31 @@
         .log-entry {
             margin: 10px 0;
         }
-        #export {
-            margin: 10px;
+        button {
+            display: block;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <button id="start">音声認識を開始</button>
-    <button id="stop">音声認識を停止</button>
-    <div id="status" class="waiting">待機中</div>
-    <select id="language">
-        <option value="ja-JP">日本語</option>
-        <option value="en-US">英語</option>
-    </select>
-    <button id="export">結果をエクスポート</button>
-    <div id="log"></div>
+    <div class="controls">
+        <button id="start">音声認識を開始</button>
+        <button id="stop">音声認識を停止</button>
+        <button id="clear">発言をクリア</button>
+        <div id="status" class="waiting">待機中</div>
+        <select id="language">
+            <option value="ja-JP">日本語</option>
+            <option value="en-US">英語</option>
+        </select>
+        <button id="export">結果をエクスポート</button>
+    </div>
+    <div id="log" class="log"></div>
     <script>
         let isContinuous = false;
+        let lineCounter = 0;
         const startButton = document.querySelector('#start');
         const stopButton = document.querySelector('#stop');
+        const clearButton = document.querySelector('#clear');
         const statusBox = document.querySelector('#status');
         const languageSelector = document.querySelector('#language');
         const logArea = document.querySelector('#log');
@@ -72,8 +89,13 @@
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    addLogEntry(`${new Date().toISOString()}: ${transcript}`);
-                    savedLog.push(transcript);
+                    lineCounter++;
+                    let entryText = transcript;
+                    if (lineCounter % 50 === 0) {
+                        entryText = `${new Date().toISOString()}: ${entryText}`;
+                    }
+                    addLogEntry(entryText);
+                    savedLog.push(entryText);
                     localStorage.setItem('savedLog', JSON.stringify(savedLog));
                 } else {
                     interimTranscript += transcript;
@@ -90,6 +112,13 @@
         stopButton.onclick = () => { 
             isContinuous = false;
             recognition.stop();
+        };
+
+        clearButton.onclick = () => {
+            logArea.innerHTML = '';
+            savedLog.length = 0;
+            lineCounter = 0;
+            localStorage.removeItem('savedLog');
         };
 
         exportButton.onclick = () => {
