@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>音声認識</title>
+    <title>音声ログ</title>
     <style>
         .controls {
-            width: 30%;
-            float: left;
-            padding-right: 20px;
+            width: 100%;
+            padding-bottom: 20px;
             box-sizing: border-box;
         }
         .log {
-            width: 70%;
-            float: left;
+            width: 100%;
             box-sizing: border-box;
         }
         #status {
@@ -32,8 +30,8 @@
             margin: 10px 0;
         }
         button {
-            display: block;
-            margin-bottom: 10px;
+            display: inline-block;
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -50,6 +48,8 @@
         <button id="export">結果をエクスポート</button>
     </div>
     <div id="log" class="log"></div>
+    <!-- ここにスクリプト部分を挿入 -->
+
     <script>
         let isContinuous = false;
         let lineCounter = 0;
