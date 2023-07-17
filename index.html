@@ -114,11 +114,18 @@
             recognition.stop();
         };
 
-        clearButton.onclick = () => {
-            logArea.innerHTML = '';
-            savedLog.length = 0;
-            lineCounter = 0;
-            localStorage.removeItem('savedLog');
+    clearButton.onclick = () => {
+        let isConfirmed = window.confirm('本当に発言をクリアしますか？');
+        if(isConfirmed) {
+            isConfirmed = window.confirm('本当に本当に発言をクリアしますか？');
+            if(isConfirmed) {
+                logArea.innerHTML = '';
+                savedLog.length = 0;
+                lineCounter = 0;
+                localStorage.removeItem('savedLog');
+            }
+        }
+    };
         };
 
         exportButton.onclick = () => {
