@@ -3,63 +3,24 @@
 <body>
 
 <h1>音声認識</h1>
+<p id="result"></p>
 
-<select id="language">
-  <option value="ja-JP">日本語</option>
-  <option value="en-US">英語</option>
-</select>
-
-<button onclick="startDictation()">音声認識開始</button>
-<button onclick="download()">ダウンロード</button>
-
-<p id="status" style="color: red;">停止中</p>
-<p id="transcript"></p>
+<button onclick="startRecognition()">開始</button>
 
 <script>
-function startDictation() {
-    var language = document.getElementById('language').value;
-    
-    if (window.hasOwnProperty('webkitSpeechRecognition')) {
+var recognition = new window.webkitSpeechRecognition();
 
-        var recognition = new webkitSpeechRecognition();
-
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.lang = language;
-        recognition.start();
+recognition.onresult = function(event) {
+    var transcript = Array.from(event.results)
+        .map(result => result[0])
+        .map(result => result.transcript)
+        .join('')
         
-        document.getElementById('status').innerHTML = "起動中";
-        document.getElementById('status').style.color = "green";
+    document.getElementById('result').textContent = transcript;
+};
 
-        recognition.onresult = function(e) {
-            document.getElementById('transcript').innerHTML = e.results[0][0].transcript;
-            recognition.stop();
-            document.getElementById('status').innerHTML = "停止中";
-            document.getElementById('status').style.color = "red";
-        };
-
-        recognition.onerror = function(e) {
-            recognition.stop();
-            document.getElementById('status').innerHTML = "停止中";
-            document.getElementById('status').style.color = "red";
-        }
-
-    }
-}
-
-function download() {
-    var text = document.getElementById('transcript').innerHTML;
-    var element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    element.setAttribute('download', 'output.txt');
-
-    element.style.display = 'none';
-    document.body.appendChild(element);
-
-    element.click();
-
-    document.body.removeChild(element);
+function startRecognition() {
+    recognition.start();
 }
 </script>
 
