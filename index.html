@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>音声を認識してログをとるページ</title>
+    <title>音声ログ</title>
     <style>
         #status {
             padding: 1em;
@@ -11,7 +11,7 @@
         }
         .remove {
             cursor: pointer;
-            color: #bbbbbb;  // 色を薄くする
+            color: #bbbbbb;
             margin-left: 10px;
         }
         .remove:before {
@@ -19,6 +19,9 @@
         }
         .log-entry {
             margin: 10px 0;
+        }
+        #export {
+            margin: 10px;
         }
     </style>
 </head>
@@ -30,7 +33,7 @@
         <option value="ja-JP">日本語</option>
         <option value="en-US">英語</option>
     </select>
-    <input type="text" id="filter" placeholder="フィルタ..." />
+    <button id="export">結果をエクスポート</button>
     <div id="log"></div>
     <script>
         let isContinuous = false;
@@ -38,20 +41,18 @@
         const stopButton = document.querySelector('#stop');
         const statusBox = document.querySelector('#status');
         const languageSelector = document.querySelector('#language');
-        const filterInput = document.querySelector('#filter');
         const logArea = document.querySelector('#log');
+        const exportButton = document.querySelector('#export');
 
-        // 認識結果の保存と読み込み
         const savedLog = JSON.parse(localStorage.getItem('savedLog')) || [];
         savedLog.forEach(entry => {
             addLogEntry(entry);
         });
 
-        // SpeechRecognition インスタンスを生成
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
 
-        recognition.interimResults = true;  // 結果がまだ確定しない状態でも取得する
-        recognition.maxAlternatives = 1;  // 候補の数
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
 
         recognition.onstart = () => {
             statusBox.textContent = '音声認識中...';
@@ -67,40 +68,37 @@
         };
 
         recognition.onresult = (event) => {
-            let interimTranscript = '';  // 中間結果
+            let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    addLogEntry(transcript);  // ログに追加
+                    addLogEntry(`${new Date().toISOString()}: ${transcript}`);
                     savedLog.push(transcript);
-                    localStorage.setItem('savedLog', JSON.stringify(savedLog));  // ログを保存
+                    localStorage.setItem('savedLog', JSON.stringify(savedLog));
                 } else {
                     interimTranscript += transcript;
                 }
             }
         };
 
-        // 音声認識を開始・停止するイベントを設定
         startButton.onclick = () => {
-            recognition.lang = languageSelector.value;  // 言語設定
+            recognition.lang = languageSelector.value;
             isContinuous = true;
             recognition.start();
         };
+
         stopButton.onclick = () => { 
             isContinuous = false;
             recognition.stop();
         };
 
-        // フィルタリング機能
-        filterInput.oninput = () => {
-            const filterValue = filterInput.value;
-            for (let entry of logArea.children) {
-                if (entry.textContent.includes(filterValue)) {
-                    entry.style.display = '';
-                } else {
-                    entry.style.display = 'none';
-                }
-            }
+        exportButton.onclick = () => {
+            const blob = new Blob([savedLog.join('\n')], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'recognition-results.txt';
+            link.click();
         };
 
         function addLogEntry(text) {
@@ -108,7 +106,6 @@
             div.className = 'log-entry';
             div.textContent = text;
 
-            // Remove button
             const removeBtn = document.createElement('span');
             removeBtn.className = 'remove';
             removeBtn.onclick = () => {
@@ -116,7 +113,7 @@
                 const index = savedLog.indexOf(text);
                 if (index > -1) {
                     savedLog.splice(index, 1);
-                    localStorage.setItem('savedLog', JSON.stringify(savedLog));  // ログを保存
+                    localStorage.setItem('savedLog', JSON.stringify(savedLog));
                 }
             };
 
