@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>音声認識</title>
+    <title>音声ろぐ</title>
     <style>
         .controls {
             width: 100%;
@@ -75,12 +75,12 @@
 
         recognition.onstart = () => {
             statusBox.textContent = '音声認識中...';
-            statusBox.style.backgroundColor = 'green';
+            statusBox.style.backgroundColor = '#90EE90';
         };
 
         recognition.onend = () => {
             statusBox.textContent = '待機中';
-            statusBox.style.backgroundColor = 'red';
+            statusBox.style.backgroundColor = '#FFB6C1';
             if (isContinuous) {
                 recognition.start();
             }
