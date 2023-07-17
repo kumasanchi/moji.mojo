@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>音声を文字に変換</h1>
+<button onclick="startDictation()">Start Dictation</button>
+<button onclick="stopDictation()">Stop Dictation</button>
+<div>
+  <label for="language">Choose a language:</label>
+  <select id="language">
+    <option value="en-US">English</option>
+    <option value="ja-JP">Japanese</option>
+  </select>
+</div>
+<div id="log"></div>
+<div id="status">Status: Stopped</div>
+
+<script>
+// Web Speech APIのSpeechRecognitionオブジェクトを作成
+var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+var recognition = new SpeechRecognition();
+
+// 言語を日本語に設定（初期設定）
+recognition.lang = 'ja-JP';
+
+var isRunning = false;
+
+// 音声認識開始
+function startDictation() {
+    // 言語を選択したものに変更
+    recognition.lang = document.getElementById('language').value;
+    recognition.start();
+    isRunning = true;
+    updateStatus("Running");
+}
+
+// 音声認識停止
+function stopDictation() {
+    recognition.stop();
+    isRunning = false;
+    updateStatus("Stopped");
+}
+
+function updateStatus(status) {
+    document.getElementById('status').innerText = "Status: " + status;
+}
+
+// 音声認識成功時の処理
+recognition.onresult = function(event) {
+    var transcript = event.results[0][0].transcript; // 音声を文字に変換した結果
+
+    // 結果をログとして表示
+    document.getElementById('log').innerHTML += '<p>' + transcript + '</p>';
+
+    // 結果をローカルストレージに保存
+    var logData = JSON.parse(localStorage.getItem('logData') || '[]');
+    logData.push(transcript);
+    localStorage.setItem('logData', JSON.stringify(logData));
+};
+
+// 音声認識が終了した場合、再度音声認識を開始（ただし、isRunningがtrueの場合のみ）
+recognition.onend = function() {
+    if (isRunning) {
+        recognition.start();
+    }
+};
+
+</script>
+
+</body>
+</html>
