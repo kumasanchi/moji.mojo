@@ -1,71 +1,44 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>音声認識</title>
+</head>
 <body>
+    <button id="start">音声認識を開始</button>
+    <button id="stop">音声認識を停止</button>
+    <textarea id="result"></textarea>
+    <ul id="log"></ul>
+    <script>
+        const startButton = document.querySelector('#start');
+        const stopButton = document.querySelector('#stop');
+        const resultArea = document.querySelector('#result');
+        const logArea = document.querySelector('#log');
 
-<h1>音声を文字に変換</h1>
-<button onclick="startDictation()">Start Dictation</button>
-<button onclick="stopDictation()">Stop Dictation</button>
-<div>
-  <label for="language">Choose a language:</label>
-  <select id="language">
-    <option value="en-US">English</option>
-    <option value="ja-JP">Japanese</option>
-  </select>
-</div>
-<div id="log"></div>
-<div id="status">Status: Stopped</div>
+        // SpeechRecognition インスタンスを生成
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
 
-<script>
-// Web Speech APIのSpeechRecognitionオブジェクトを作成
-var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-var recognition = new SpeechRecognition();
+        recognition.lang = 'ja-JP';  // 言語を日本語に設定
+        recognition.interimResults = true;  // 結果がまだ確定しない状態でも取得する
+        recognition.maxAlternatives = 1;  // 候補の数
 
-// 言語を日本語に設定（初期設定）
-recognition.lang = 'ja-JP';
+        recognition.onresult = (event) => {
+            let interimTranscript = '';  // 中間結果
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    const li = document.createElement('li');
+                    li.textContent = transcript;
+                    logArea.appendChild(li);  // ログに追加
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            resultArea.value = interimTranscript;  // 中間結果を表示
+        };
 
-var isRunning = false;
-
-// 音声認識開始
-function startDictation() {
-    // 言語を選択したものに変更
-    recognition.lang = document.getElementById('language').value;
-    recognition.start();
-    isRunning = true;
-    updateStatus("Running");
-}
-
-// 音声認識停止
-function stopDictation() {
-    recognition.stop();
-    isRunning = false;
-    updateStatus("Stopped");
-}
-
-function updateStatus(status) {
-    document.getElementById('status').innerText = "Status: " + status;
-}
-
-// 音声認識成功時の処理
-recognition.onresult = function(event) {
-    var transcript = event.results[0][0].transcript; // 音声を文字に変換した結果
-
-    // 結果をログとして表示
-    document.getElementById('log').innerHTML += '<p>' + transcript + '</p>';
-
-    // 結果をローカルストレージに保存
-    var logData = JSON.parse(localStorage.getItem('logData') || '[]');
-    logData.push(transcript);
-    localStorage.setItem('logData', JSON.stringify(logData));
-};
-
-// 音声認識が終了した場合、再度音声認識を開始（ただし、isRunningがtrueの場合のみ）
-recognition.onend = function() {
-    if (isRunning) {
-        recognition.start();
-    }
-};
-
-</script>
-
+        // 音声認識を開始・停止するイベントを設定
+        startButton.onclick = () => { recognition.start(); };
+        stopButton.onclick = () => { recognition.stop(); };
+    </script>
 </body>
 </html>
