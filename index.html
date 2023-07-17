@@ -1,79 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>音声をテキストに変換</title>
-    <style>
-        .status-idle {
-            color: gray;
-        }
-        .status-recording {
-            color: red;
-        }
-        .status-error {
-            color: orange;
-        }
-    </style>
+    <title>音声認識</title>
 </head>
 <body>
-    <h1>音声をテキストに変換</h1>
-
-    <select id="lang">
-        <option value="en-US">英語</option>
-        <option value="ja-JP">日本語</option>
-    </select>
-
-    <button id="start_stop_btn">録音開始</button>
-
-    <div id="status" class="status-idle">待機中</div>
-
-    <textarea id="log" rows="10" cols="50"></textarea>
-
+    <button id="start">音声認識を開始</button>
+    <button id="stop">音声認識を停止</button>
+    <textarea id="result"></textarea>
+    <ul id="log"></ul>
     <script>
-        let recognizing = false;
-        const recognition = new webkitSpeechRecognition();
-        const start_stop_btn = document.getElementById('start_stop_btn');
-        const status = document.getElementById('status');
-        const log = document.getElementById('log');
-        const lang = document.getElementById('lang');
+        const startButton = document.querySelector('#start');
+        const stopButton = document.querySelector('#stop');
+        const resultArea = document.querySelector('#result');
+        const logArea = document.querySelector('#log');
 
-        recognition.continuous = true;
-        recognition.interimResults = true;
+        // SpeechRecognition インスタンスを生成
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
 
-        recognition.onstart = function() {
-            recognizing = true;
-            status.textContent = "録音中";
-            status.className = "status-recording";
-        };
+        recognition.lang = 'ja-JP';  // 言語を日本語に設定
+        recognition.interimResults = true;  // 結果がまだ確定しない状態でも取得する
+        recognition.maxAlternatives = 1;  // 候補の数
 
-        recognition.onerror = function(event) {
-            status.textContent = "エラー: " + event.error;
-            status.className = "status-error";
-        };
-
-        recognition.onend = function() {
-            recognizing = false;
-            status.textContent = "待機中";
-            status.className = "status-idle";
-        };
-
-        recognition.onresult = function(event) {
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
+        recognition.onresult = (event) => {
+            let interimTranscript = '';  // 中間結果
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    log.value += event.results[i][0].transcript;
+                    const li = document.createElement('li');
+                    li.textContent = transcript;
+                    logArea.appendChild(li);  // ログに追加
+                } else {
+                    interimTranscript += transcript;
                 }
             }
+            resultArea.value = interimTranscript;  // 中間結果を表示
         };
 
-        start_stop_btn.onclick = function() {
-            if (recognizing) {
-                recognition.stop();
-                start_stop_btn.textContent = "録音開始";
-            } else {
-                recognition.lang = lang.value;
-                recognition.start();
-                start_stop_btn.textContent = "録音停止";
-            }
-        };
+        // 音声認識を開始・停止するイベントを設定
+        startButton.onclick = () => { recognition.start(); };
+        stopButton.onclick = () => { recognition.stop(); };
     </script>
 </body>
 </html>
