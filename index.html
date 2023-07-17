@@ -11,11 +11,14 @@
         }
         .remove {
             cursor: pointer;
-            color: red;
+            color: #bbbbbb;  // 色を薄くする
             margin-left: 10px;
         }
         .remove:before {
             content: "\00D7";
+        }
+        .log-entry {
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -28,7 +31,7 @@
         <option value="en-US">英語</option>
     </select>
     <input type="text" id="filter" placeholder="フィルタ..." />
-    <ul id="log"></ul>
+    <div id="log"></div>
     <script>
         let isContinuous = false;
         const startButton = document.querySelector('#start');
@@ -37,6 +40,12 @@
         const languageSelector = document.querySelector('#language');
         const filterInput = document.querySelector('#filter');
         const logArea = document.querySelector('#log');
+
+        // 認識結果の保存と読み込み
+        const savedLog = JSON.parse(localStorage.getItem('savedLog')) || [];
+        savedLog.forEach(entry => {
+            addLogEntry(entry);
+        });
 
         // SpeechRecognition インスタンスを生成
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
@@ -62,16 +71,9 @@
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    const li = document.createElement('li');
-                    li.textContent = transcript;
-
-                    // Remove button
-                    const removeBtn = document.createElement('span');
-                    removeBtn.className = 'remove';
-                    removeBtn.onclick = () => { li.remove(); };
-
-                    li.appendChild(removeBtn);
-                    logArea.appendChild(li);  // ログに追加
+                    addLogEntry(transcript);  // ログに追加
+                    savedLog.push(transcript);
+                    localStorage.setItem('savedLog', JSON.stringify(savedLog));  // ログを保存
                 } else {
                     interimTranscript += transcript;
                 }
@@ -92,14 +94,35 @@
         // フィルタリング機能
         filterInput.oninput = () => {
             const filterValue = filterInput.value;
-            for (let li of logArea.children) {
-                if (li.textContent.includes(filterValue)) {
-                    li.style.display = '';
+            for (let entry of logArea.children) {
+                if (entry.textContent.includes(filterValue)) {
+                    entry.style.display = '';
                 } else {
-                    li.style.display = 'none';
+                    entry.style.display = 'none';
                 }
             }
         };
+
+        function addLogEntry(text) {
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.textContent = text;
+
+            // Remove button
+            const removeBtn = document.createElement('span');
+            removeBtn.className = 'remove';
+            removeBtn.onclick = () => {
+                div.remove();
+                const index = savedLog.indexOf(text);
+                if (index > -1) {
+                    savedLog.splice(index, 1);
+                    localStorage.setItem('savedLog', JSON.stringify(savedLog));  // ログを保存
+                }
+            };
+
+            div.appendChild(removeBtn);
+            logArea.appendChild(div);
+        }
     </script>
 </body>
 </html>
