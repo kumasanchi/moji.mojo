@@ -24,6 +24,7 @@
     <textarea id="result" readonly></textarea>
     <ul id="log"></ul>
     <script>
+        let isContinuous = false;
         const startButton = document.querySelector('#start');
         const stopButton = document.querySelector('#stop');
         const statusBox = document.querySelector('#status');
@@ -45,6 +46,9 @@
         recognition.onend = () => {
             statusBox.textContent = '待機中';
             statusBox.style.backgroundColor = 'red';
+            if (isContinuous) {
+                recognition.start();
+            }
         };
 
         recognition.onresult = (event) => {
@@ -65,9 +69,13 @@
         // 音声認識を開始・停止するイベントを設定
         startButton.onclick = () => {
             recognition.lang = languageSelector.value;  // 言語設定
+            isContinuous = true;
             recognition.start();
         };
-        stopButton.onclick = () => { recognition.stop(); };
+        stopButton.onclick = () => { 
+            isContinuous = false;
+            recognition.stop();
+        };
     </script>
 </body>
 </html>
