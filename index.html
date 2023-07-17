@@ -3,13 +3,15 @@
 <head>
     <title>音声認識</title>
     <style>
-        #result {
-            width: 100%;
-            height: 200px;
-        }
         #status {
             padding: 1em;
             color: white;
+        }
+        .person1 {
+            color: blue;
+        }
+        .person2 {
+            color: red;
         }
     </style>
 </head>
@@ -21,7 +23,10 @@
         <option value="ja-JP">日本語</option>
         <option value="en-US">英語</option>
     </select>
-    <textarea id="result" readonly></textarea>
+    <select id="speaker">
+        <option value="person1">Person 1</option>
+        <option value="person2">Person 2</option>
+    </select>
     <ul id="log"></ul>
     <script>
         let isContinuous = false;
@@ -29,7 +34,7 @@
         const stopButton = document.querySelector('#stop');
         const statusBox = document.querySelector('#status');
         const languageSelector = document.querySelector('#language');
-        const resultArea = document.querySelector('#result');
+        const speakerSelector = document.querySelector('#speaker');
         const logArea = document.querySelector('#log');
 
         // SpeechRecognition インスタンスを生成
@@ -56,9 +61,9 @@
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    resultArea.value += transcript + '\n';  // テキストエリアに追加
                     const li = document.createElement('li');
                     li.textContent = transcript;
+                    li.className = speakerSelector.value;
                     logArea.appendChild(li);  // ログに追加
                 } else {
                     interimTranscript += transcript;
