@@ -1,28 +1,79 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>音声をテキストに変換</title>
+    <style>
+        .status-idle {
+            color: gray;
+        }
+        .status-recording {
+            color: red;
+        }
+        .status-error {
+            color: orange;
+        }
+    </style>
+</head>
 <body>
+    <h1>音声をテキストに変換</h1>
 
-<h1>音声認識</h1>
-<p id="result"></p>
+    <select id="lang">
+        <option value="en-US">英語</option>
+        <option value="ja-JP">日本語</option>
+    </select>
 
-<button onclick="startRecognition()">開始</button>
+    <button id="start_stop_btn">録音開始</button>
 
-<script>
-var recognition = new window.webkitSpeechRecognition();
+    <div id="status" class="status-idle">待機中</div>
 
-recognition.onresult = function(event) {
-    var transcript = Array.from(event.results)
-        .map(result => result[0])
-        .map(result => result.transcript)
-        .join('')
-        
-    document.getElementById('result').textContent = transcript;
-};
+    <textarea id="log" rows="10" cols="50"></textarea>
 
-function startRecognition() {
-    recognition.start();
-}
-</script>
+    <script>
+        let recognizing = false;
+        const recognition = new webkitSpeechRecognition();
+        const start_stop_btn = document.getElementById('start_stop_btn');
+        const status = document.getElementById('status');
+        const log = document.getElementById('log');
+        const lang = document.getElementById('lang');
 
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = function() {
+            recognizing = true;
+            status.textContent = "録音中";
+            status.className = "status-recording";
+        };
+
+        recognition.onerror = function(event) {
+            status.textContent = "エラー: " + event.error;
+            status.className = "status-error";
+        };
+
+        recognition.onend = function() {
+            recognizing = false;
+            status.textContent = "待機中";
+            status.className = "status-idle";
+        };
+
+        recognition.onresult = function(event) {
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    log.value += event.results[i][0].transcript;
+                }
+            }
+        };
+
+        start_stop_btn.onclick = function() {
+            if (recognizing) {
+                recognition.stop();
+                start_stop_btn.textContent = "録音開始";
+            } else {
+                recognition.lang = lang.value;
+                recognition.start();
+                start_stop_btn.textContent = "録音停止";
+            }
+        };
+    </script>
 </body>
 </html>
