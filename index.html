@@ -2,30 +2,57 @@
 <html>
 <head>
     <title>音声認識</title>
+    <style>
+        #result {
+            width: 100%;
+            height: 200px;
+        }
+        #status {
+            padding: 1em;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <button id="start">音声認識を開始</button>
     <button id="stop">音声認識を停止</button>
-    <textarea id="result"></textarea>
+    <div id="status">待機中</div>
+    <select id="language">
+        <option value="ja-JP">日本語</option>
+        <option value="en-US">英語</option>
+    </select>
+    <textarea id="result" readonly></textarea>
     <ul id="log"></ul>
     <script>
         const startButton = document.querySelector('#start');
         const stopButton = document.querySelector('#stop');
+        const statusBox = document.querySelector('#status');
+        const languageSelector = document.querySelector('#language');
         const resultArea = document.querySelector('#result');
         const logArea = document.querySelector('#log');
 
         // SpeechRecognition インスタンスを生成
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();
 
-        recognition.lang = 'ja-JP';  // 言語を日本語に設定
         recognition.interimResults = true;  // 結果がまだ確定しない状態でも取得する
         recognition.maxAlternatives = 1;  // 候補の数
+
+        recognition.onstart = () => {
+            statusBox.textContent = '音声認識中...';
+            statusBox.style.backgroundColor = 'green';
+        };
+
+        recognition.onend = () => {
+            statusBox.textContent = '待機中';
+            statusBox.style.backgroundColor = 'red';
+        };
 
         recognition.onresult = (event) => {
             let interimTranscript = '';  // 中間結果
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
+                    resultArea.value += transcript + '\n';  // テキストエリアに追加
                     const li = document.createElement('li');
                     li.textContent = transcript;
                     logArea.appendChild(li);  // ログに追加
@@ -33,11 +60,13 @@
                     interimTranscript += transcript;
                 }
             }
-            resultArea.value = interimTranscript;  // 中間結果を表示
         };
 
         // 音声認識を開始・停止するイベントを設定
-        startButton.onclick = () => { recognition.start(); };
+        startButton.onclick = () => {
+            recognition.lang = languageSelector.value;  // 言語設定
+            recognition.start();
+        };
         stopButton.onclick = () => { recognition.stop(); };
     </script>
 </body>
